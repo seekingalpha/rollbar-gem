@@ -18,20 +18,31 @@ module Rollbar
       end
 
       def to_h
-        # parse the line
+        frame_data = case frame.class.name
+                     when 'String'
+                       string_parse
+                     when 'Thread::Backtrace::Location'
+                       { :filename => frame.path, :lineno => frame.lineno, :method => frame.label }
+                     when 'BetterErrors::StackFrame'
+                       { :filename => frame.filename, :lineno => frame.line, :method => frame.name }
+                     end
+
+        return unknown_frame unless frame_data
+        frame_data.merge(extra_frame_data(frame_data[:filename], frame_data[:lineno]))
+      end
+
+      def string_parse
         match = frame.match(/(.*):(\d+)(?::in `([^']+)')?/)
 
-        return unknown_frame unless match
+        return unless match
 
         filename = match[1]
         lineno = match[2].to_i
-        frame_data = {
+        {
           :filename => filename,
           :lineno => lineno,
           :method => match[3]
         }
-
-        frame_data.merge(extra_frame_data(filename, lineno))
       end
 
       private
