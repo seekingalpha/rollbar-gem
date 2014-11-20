@@ -365,13 +365,22 @@ module Rollbar
 
     def trace_data(exception)
       frames = exception_backtrace(exception).map do |frame|
-        # parse the line
-        match = frame.match(/(.*):(\d+)(?::in `([^']+)')?/)
+        case frame.class.name
+        when 'String'
+          # parse the line
+          match = frame.match(/(.*):(\d+)(?::in `([^']+)')?/)
 
-        if match
-          { :filename => match[1], :lineno => match[2].to_i, :method => match[3] }
+          if match
+            { :filename => match[1], :lineno => match[2].to_i, :method => match[3] }
+          else
+            { :filename => "<unknown>", :lineno => 0, :method => frame.to_s }
+          end
+        when 'Thread::Backtrace::Location'
+          { :filename => frame.path, :lineno => frame.lineno, :method => frame.label }
+        when 'BetterErrors::StackFrame'
+          { :filename => frame.filename, :lineno => frame.line, :method => frame.name }
         else
-          { :filename => "<unknown>", :lineno => 0, :method => frame }
+          { :filename => "<unknown>", :lineno => 0, :method => frame.to_s }
         end
       end
 
