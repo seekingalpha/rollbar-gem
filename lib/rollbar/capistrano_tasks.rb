@@ -16,7 +16,7 @@ module Rollbar
             if result[:success] && (deploy_id = result[:data] && result[:data][:deploy_id])
               capistrano.set :rollbar_deploy_id, deploy_id
             else
-              logger.error 'Unable to report deploy to Rollbar' + (result[:message] ? ': ' + result[:message] : '')
+              logger.important 'Unable to report deploy to Rollbar' + (result[:message] ? ': ' + result[:message] : '')
             end
           end
         end
@@ -42,7 +42,7 @@ module Rollbar
         yield
 
       rescue StandardError => e
-        logger.error "Error reporting to Rollbar: #{e.inspect}"
+        logger.important "Error reporting to Rollbar: #{e.inspect}"
       end
 
       def deploy_update(capistrano, logger, dry_run, opts = {})
@@ -56,7 +56,7 @@ module Rollbar
               if result[:success]
                 logger.info 'Updated deploy status in Rollbar'
               else
-                logger.error 'Unable to update deploy status in Rollbar' + (result[:message] ? ': ' + result[:message] : '')
+                logger.important 'Unable to update deploy status in Rollbar' + (result[:message] ? ': ' + result[:message] : '')
               end
             end
           end
@@ -117,7 +117,7 @@ module Rollbar
         if capistrano.fetch(:rollbar_deploy_id)
           yield
         else
-          logger.error 'Failed to update the deploy in Rollbar. No deploy id available.'
+          logger.important 'Failed to update the deploy in Rollbar. No deploy id available.'
         end
       end
 
